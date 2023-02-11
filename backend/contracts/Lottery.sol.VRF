@@ -1,0 +1,54 @@
+//SPDX-License-Identifier:MIT
+pragma solidity ^0.8.17;
+
+contract Lottery {
+    address public owner;
+    address[] public players;
+    address[] public winners;
+    uint public lotteryId;
+
+    constructor() {
+        owner = msg.sender;
+        lotteryId = 0;
+    }
+
+    function enter() public {
+        require(msg.value >= 0.0001 ether);
+        require(owner != msg.sender);
+        players.push(payable(msg.sender));
+    }
+
+    function  getPlayers() public view returns(address [] memory) {
+        return players;
+    }
+
+    function getbalance() public view returns(uint) {
+        return address(this).balance;
+    }
+
+    function getLotteryId() public view returns(uint) {
+        return lotteryId;
+    }
+    
+    function getRandomNumber() public view returns(uint) {
+        return uint(keccak256(abi.encodePacked(owner, block.timestamp)));
+    }
+
+    function pickWinner() public onlyOwner {
+        uint randomIndex = getRandomNumber() % players.length;
+        players[randomIndex].transfer(address(this).balance);
+        winners.push(players[randomIndex]);
+        lotteryId++;
+        players = new address payable[](0);
+    }
+  
+    function getWinners() public view returns(address[] memory) {
+        return winners;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner,"Only owner has control");
+        _;
+    }
+
+}
